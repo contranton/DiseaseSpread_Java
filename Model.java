@@ -10,10 +10,10 @@ import java.io.File;
 public class Model extends SimState {
 
 	// Parameters
-	public static final int N_AGENTS = 10000;
-	public static final int STEP_LIM = 6000;
-	public static final int SAVE_INTERVAL = 1;
-	public static final int WIDTH = 800;
+	public static final int N_AGENTS      = 10000;
+	public static final int STEP_LIM      = 6000;
+	public static final int SAVE_INTERVAL = 10;
+	public static final int WIDTH         = 800;
 
 	// Fields
 	public Continuous2D space = new Continuous2D(1.0, WIDTH, WIDTH);
@@ -42,10 +42,7 @@ public class Model extends SimState {
 					space.getHeight() * (random.nextDouble() - 0.5)));
 
 			// Assign coughing events
-			schedule.scheduleRepeating(random.nextDouble() * agent.getCoughInterval(), // time
-					agent, // agent
-					agent.getCoughInterval() // interval
-			);
+			schedule.scheduleOnce(random.nextDouble() * agent.getCoughInterval(), agent);
 
 		}
 
@@ -82,8 +79,13 @@ public class Model extends SimState {
 				}
 
 				// Stop simulation if all sick or all healthy
-				if (Agent.sickest.getHealth() == Agent.healthiest.getHealth()){
-					System.out.println("State homologized -- Ending prematurely");
+				if (Math.abs(Agent.sickest.getHealth() - Agent.healthiest.getHealth()) < 0.01){
+					System.out.print("Ending prematurely: ");
+					if(Agent.sickest.getHealth() < 1){
+						System.out.print("All healthy\n");
+					}else{
+						System.out.print("All sick\n");
+					}
 					state.kill();
 					state.write_data();
 				}
@@ -125,7 +127,7 @@ public class Model extends SimState {
 		int i = 0;
 		for (Object tmp : this.agents) {
 			i++;
-			if (i % 100 != 0)
+			if (i % 1 != 0)
 				continue;
 			Agent a = (Agent) tmp;
 			a.updateHealth(this);

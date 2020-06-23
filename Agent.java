@@ -7,9 +7,9 @@ public class Agent implements Steppable {
 
     // Parameters
     public static final double COUGH_INTERVAL     = 800.0;
-    public static final double COUGH_INTERVAL_STD = 400.0;
-    public static final double HEAL_RATE          = 0.3;
-    public static final double HEAL_RATE_STD      = 0.1;
+    public static final double COUGH_INTERVAL_STD = 600.0;
+    public static final double HEAL_RATE          = 0.5;
+    public static final double HEAL_RATE_STD      = 0.2;
     public static final double NEIGH_RADIUS       = 200;
     public static final double MAX_HEALTH         = 100;
 
@@ -64,6 +64,8 @@ public class Agent implements Steppable {
             double dist = selfLoc.distance(otherLoc);
             other.setHealth(other.getHealth() + this.getHealth() / dist);
         }
+
+        model.schedule.scheduleOnceIn(Math.abs(coughIntervalGen.nextDouble()), this);
     }
 
     public void updateHealth(Model model) {
