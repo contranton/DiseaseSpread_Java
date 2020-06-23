@@ -1,9 +1,0 @@
-{
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "mason.20.jar"
-    ],
-    "java.dependency.packagePresentation": "hierarchical",
-    "java.dependency.syncWithFolderExplorer": true,
-    "java.format.settings.url": "eclipse-formatter.xml"
-}
