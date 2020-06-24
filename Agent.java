@@ -6,9 +6,9 @@ import sim.util.distribution.Normal;
 public class Agent implements Steppable {
 
     // Parameters
-    public static final double COUGH_INTERVAL     = 800.0;
-    public static final double COUGH_INTERVAL_STD = 600.0;
-    public static final double HEAL_RATE          = 0.5;
+    public static final double COUGH_INTERVAL     = 200.0;
+    public static final double COUGH_INTERVAL_STD = 50.0;
+    public static final double HEAL_RATE          = 0.4;
     public static final double HEAL_RATE_STD      = 0.2;
     public static final double NEIGH_RADIUS       = 200;
     public static final double MAX_HEALTH         = 100;
@@ -19,16 +19,26 @@ public class Agent implements Steppable {
     private static final Normal healRateGen      = new Normal(HEAL_RATE, HEAL_RATE, EC);
     private static final Normal initialHealthGen = new Normal(0.0, 5.0, EC);
     
-    // Keeping track of extremes
+    // Keeping track of global statistics
     public static Agent sickest;
     public static Agent healthiest;
+    public static int numberSick = 0;
 
     // Fields
     private double health;
     private double coughInterval;
     private double healRate;
     private double lastUpdateTime;
+    private boolean isSick;
 
+    // Utils
+    private double sumHealth;
+
+    public static void clear(){
+        numberSick = 0;
+        healthiest = null;
+        sickest = null;
+    }
 
     // Constructor
     public Agent() {
@@ -36,6 +46,7 @@ public class Agent implements Steppable {
         setCoughInterval(Math.abs(coughIntervalGen.nextDouble()));
         setHealRate(     Math.abs(healRateGen     .nextDouble()));
 
+        // Assign initial sickest and healthiest
         if(sickest == null){
             sickest = this;
         }else if (healthiest == null){
@@ -43,7 +54,7 @@ public class Agent implements Steppable {
             this.updateExtremes();
         }else{
             this.updateExtremes();        
-        }        
+        }
     }
 
     // Step method
@@ -94,7 +105,22 @@ public class Agent implements Steppable {
     }
 
     public void setHealth(double health) {
+        // Clip between extremes
         this.health = Math.max(0.0, Math.min(health, MAX_HEALTH));
+        this.sumHealth += this.health;
+
+        // Update sick status and static counter
+        if(!this.isSick){
+            if(this.health >= 50){
+                this.isSick = true;
+                Agent.numberSick++;
+            }
+        }else{
+            if(this.health < 50){
+                this.isSick = false;
+                Agent.numberSick--;
+            }
+        }
     }
 
     public double getCoughInterval() {
@@ -111,6 +137,10 @@ public class Agent implements Steppable {
 
     public void setHealRate(double healRate) {
         this.healRate = healRate;
+    }
+
+    public double getSumHealth(){
+        return sumHealth;
     }
 
 }
