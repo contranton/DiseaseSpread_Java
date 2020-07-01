@@ -7,7 +7,7 @@ public class Agent implements Steppable {
 
     // Parameters
     public static final double COUGH_INTERVAL     = 200.0;
-    public static final double COUGH_INTERVAL_STD = 50.0;
+    public static final double COUGH_INTERVAL_STD = 200.0;
     public static final double HEAL_RATE          = 0.4;
     public static final double HEAL_RATE_STD      = 0.2;
     public static final double NEIGH_RADIUS       = 200;
@@ -30,9 +30,11 @@ public class Agent implements Steppable {
     private double healRate;
     private double lastUpdateTime;
     private boolean isSick;
+    private Bag neighbors;
 
     // Utils
-    private double sumHealth;
+    private double sumHealth; // Sums lifetime health to get sickest overall agents
+    private boolean doUpdate = true; // Whether should update neighbors
 
     public static void clear(){
         numberSick = 0;
@@ -62,9 +64,11 @@ public class Agent implements Steppable {
         Model model = (Model) state;
         Double2D selfLoc = model.space.getObjectLocation(this);
 
-        Bag others = model.space.getNeighborsWithinDistance(model.space.getObjectLocation(this), NEIGH_RADIUS);
+        if(this.doUpdate){
+            this.updateNeighbors(model);
+        }
 
-        for (Object a : others.toArray()) {
+        for (Object a : neighbors.toArray()) {
             Agent other = (Agent) a;
             if (other == this)
                 continue;
@@ -96,6 +100,11 @@ public class Agent implements Steppable {
         if (this.getHealth() < healthiest.getHealth()){
             healthiest = this;
         }
+    }
+
+    public void updateNeighbors(Model model){
+        this.neighbors = model.space.getNeighborsWithinDistance(model.space.getObjectLocation(this), NEIGH_RADIUS);
+        this.doUpdate = false;
     }
 
     // Setters/Getters

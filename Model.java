@@ -16,7 +16,7 @@ public class Model extends SimState {
 	// Parameters
 	public static final int N_JOBS        = 10;
 	public static final int N_AGENTS      = 10000;
-	public static final int STEP_LIM      = 6000;
+	public static final int STEP_LIM      = 10000;
 	public static final int SAVE_INTERVAL = 10;
 	public static final int WIDTH         = 800;
 
@@ -56,7 +56,6 @@ public class Model extends SimState {
 			schedule.scheduleOnce(random.nextDouble() * agent.getCoughInterval(), agent);
 
 		}
-
 	}
 
 	private BufferedWriter open_file(int id){

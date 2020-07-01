@@ -38,17 +38,17 @@ def plot(name, save=False):
     ## Statistics
     stats = {}
 
-    max_N = n_sick.max()   # Max infected
-    stats["N_{max}"] = {"val": max_N, "str": f"{max_N}"}
-    stats["p_{max}"] = {"val": max_N/N, "str": f"{max_N/N*100:0.2f}\%"} 
+    max_N = int(n_sick.max())   # Max infected
+    stats["N_{max}"] = {"val": max_N, "str": f"{max_N:4}"}
+    stats["p_{max}"] = {"val": max_N/N, "str": f"{max_N/N*100:2.1f}\%"} 
 
     # Critical and rise time (only if 100% infection)
     if(max_N==N):
         crit_time = t[np.where(n_sick<=N/np.e)[0][-1]]
         sett_time = t[np.where(n_sick<=N*(1-1/np.e))[0][-1]]
         rise_time = sett_time - crit_time
-        stats["t_{crit}"] = {"val": crit_time, "str": f"{crit_time:0.2f}"}
-        stats["t_{rise}"] = {"val": rise_time, "str": f"{rise_time:0.2f}"}
+        stats["t_{crit}"] = {"val": crit_time, "str": f"{crit_time:3.2f}"}
+        stats["t_{rise}"] = {"val": rise_time, "str": f"{rise_time:3.2f}"}
     # Time to full heal (If eradicates)
     elif(n_sick[-1]==0):
         # Considering sick cases (health > 50)
@@ -56,11 +56,11 @@ def plot(name, save=False):
         if np.any(t_sick):
             start_time = t[t_sick[0]]
             heal_time = t[t_sick[-1]] - start_time
-            stats["t_{heal}"] = {"val": heal_time, "str": f"{heal_time:0.2f}"}
+            stats["t_{heal}"] = {"val": heal_time, "str": f"{heal_time:3.2f}"}
 
         # Considering 
         erad_time = t[np.where(n_sick==0)[0][-1]]
-        stats["t_{eradicate}"] = {"val": erad_time, "str": f"{erad_time:0.2f}"}
+        stats["t_{eradicate}"] = {"val": erad_time, "str": f"{erad_time:3.2f}"}
 
 
     ###########   
@@ -71,6 +71,7 @@ def plot(name, save=False):
     ax.set_xlabel("Tiempo")
     ax.set_ylabel("Salud")
     ax.set_ylim((0, 100))
+    ax.grid(alpha=0.3)
     ax.tick_params(axis='y')
     [ax.plot(t, data[:, i], linewidth=0.3, alpha=0.8) for i in range(data.shape[1])]
 
@@ -79,6 +80,7 @@ def plot(name, save=False):
     ax2.set_ylabel("# Enfermos", color='red')
     ax2.set_ylim((0, N))
     ax2.set_yticks(np.arange(0, N+1, N//5))
+    ax2.grid(alpha=0.3)
     ax2.plot(t, n_sick, color='red')
     ax2.tick_params(axis='y', labelcolor='red')
 
@@ -86,7 +88,7 @@ def plot(name, save=False):
 
     # Show statistics
     textstr = "\n".join(["$"+key+f" = {val['str']}$" for key, val in stats.items()])
-    at = AnchoredText(textstr, loc="upper right")
+    at = AnchoredText(textstr, loc=("lower right" if max_N==N else "upper right"))
     at.patch.set_boxstyle("round, pad=0., rounding_size=0.2")
     ax.add_artist(at)
 
@@ -106,7 +108,7 @@ def read_data_names():
                 yield name
 
 if __name__ == "__main__":
-    pp = PdfPages("plots/paramset2.pdf")
+    pp = PdfPages("plots/paramset1.pdf")
     for name in read_data_names():
         fig = plot(name)
         fig.savefig(pp, format="pdf")
