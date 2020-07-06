@@ -4,14 +4,15 @@ import sim.util.*;
 import sim.util.distribution.Normal;
 
 public class Agent implements Steppable {
+	private static final long serialVersionUID = 1L;
 
     // Parameters
-    public static final double COUGH_INTERVAL     = 200.0;
-    public static final double COUGH_INTERVAL_STD = 200.0;
-    public static final double HEAL_RATE          = 0.4;
-    public static final double HEAL_RATE_STD      = 0.2;
-    public static final double NEIGH_RADIUS       = 200;
-    public static final double MAX_HEALTH         = 100;
+    public static double COUGH_INTERVAL     = 50.0;
+    public static double COUGH_INTERVAL_STD = 20.0;
+    public static double HEAL_RATE          = 0.2;
+    public static double HEAL_RATE_STD      = 0.1;
+    public static double NEIGH_RADIUS       = 50;
+    public static double MAX_HEALTH         = 100;
 
     // Distribution generators
     private static final MersenneTwisterFast EC  = new MersenneTwisterFast();
@@ -30,11 +31,12 @@ public class Agent implements Steppable {
     private double healRate;
     private double lastUpdateTime;
     private boolean isSick;
-    private Bag neighbors;
+    private Bag neighbors =  new Bag();
 
     // Utils
-    private double sumHealth; // Sums lifetime health to get sickest overall agents
+    private double sumHealth;        // Sums lifetime health to get sickest overall agents
     private boolean doUpdate = true; // Whether should update neighbors
+    public int N_notZero = 0;        // For sorting
 
     public static void clear(){
         numberSick = 0;
@@ -74,10 +76,12 @@ public class Agent implements Steppable {
                 continue;
             other.updateHealth(model);
 
-            // Transfer function
+            // Calculate new health
             Double2D otherLoc = model.space.getObjectLocation(other);
             double dist = selfLoc.distance(otherLoc);
-            other.setHealth(other.getHealth() + this.getHealth() / dist);
+            double new_health = other.getHealth() + this.getHealth() / dist;
+
+            other.setHealth(new_health);
         }
 
         model.schedule.scheduleOnceIn(Math.abs(coughIntervalGen.nextDouble()), this);
@@ -89,6 +93,10 @@ public class Agent implements Steppable {
 
         this.setHealth(this.getHealth() - timeDiff * HEAL_RATE);
         this.lastUpdateTime = curTime;
+
+        if(this.getHealth() > 0.0){
+            this.N_notZero++;
+        }
 
         this.updateExtremes();
     }
@@ -103,8 +111,22 @@ public class Agent implements Steppable {
     }
 
     public void updateNeighbors(Model model){
-        this.neighbors = model.space.getNeighborsWithinDistance(model.space.getObjectLocation(this), NEIGH_RADIUS);
+        Bag new_neighbors = model.space.getNeighborsWithinDistance(model.space.getObjectLocation(this), NEIGH_RADIUS);
+
+        // Add self to new neighbors's neighbor list
+        for(Object a: this.neighbors){
+            if(!new_neighbors.contains((Agent) a)){
+                ((Agent) a).neighbors.add(this);
+            }
+        }
+
+        // Update model's connectivity measure
+        model.addConnectivity(-this.neighbors.size());
+        model.addConnectivity(new_neighbors.size());
+
+        // Assign
         this.doUpdate = false;
+        this.neighbors = new_neighbors;
     }
 
     // Setters/Getters
