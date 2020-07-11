@@ -4,6 +4,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
 
+# TODO: Save data for neighborhoods, plot their number of sick together in a subplots
+
 plt.rc("mathtext", fontset="stixsans")
 
 # https://stackoverflow.com/a/10482477
@@ -20,7 +22,7 @@ def align_yaxis(ax1, v1, ax2, v2):
 
 
 def plot(m_id, job):
-    print(f"Plot {job}...", end="")
+    print(f"Plot {m_id}:{job}...", end="")
     data = []
     with open(f"data_{m_id}/{job}.csv", "r") as f:
         N = int(f.readline())
@@ -52,15 +54,19 @@ def plot(m_id, job):
     stats["N_{max}"] = {"val": max_N, "str": f"{max_N:4}"}
     stats["p_{max}"] = {"val": max_N/N, "str": f"{max_N/N*100:2.1f}\%"}
 
-    # Critical and rise time (only if 100% infection)
-    if(max_N == N):
-        crit_time = t[np.where(n_sick <= N/np.e)[0][-1]]
-        sett_time = t[np.where(n_sick <= N*(1-1/np.e))[0][-1]]
-        rise_time = sett_time - crit_time
-        stats["t_{crit}"] = {"val": crit_time, "str": f"{crit_time:3.2f}"}
-        stats["t_{rise}"] = {"val": rise_time, "str": f"{rise_time:3.2f}"}
+    # Critical and rise time to max % infected
+    if(max_N > 0):
+        try:
+            crit_time = t[np.where(n_sick <= max_N/np.e)[0][-1]]
+            sett_time = t[np.where(n_sick <= max_N*(1-1/np.e))[0][-1]]
+            rise_time = sett_time - crit_time
+            stats["t_{crit}"] = {"val": crit_time, "str": f"{crit_time:3.2f}"}
+            stats["t_{rise}"] = {"val": rise_time, "str": f"{rise_time:3.2f}"}
+        except IndexError as e:
+            print(e)
+            print("Bugged out data set, watch out!")
     # Time to full heal (If eradicates)
-    elif(n_sick[-1] == 0):
+    if(n_sick[-1] == 0):
         # Considering sick cases (health > 50)
         t_sick = np.where(n_sick == 1)[0]
         if np.any(t_sick):
@@ -127,6 +133,7 @@ def read_data_names():
             yield m_id, names
 
 if __name__ == "__main__":
+    import winsound
     for m_id, jobs in read_data_names():
         with open(f"results/{m_id}.csv", 'w') as f:
             f.write("N_{max}, p_{max}, t_{crit}, t_{rise}, t_{heal}, t_{eradicate}\n")
@@ -137,3 +144,6 @@ if __name__ == "__main__":
             fig.savefig(pp, format="pdf")
             plt.close()
         pp.close()
+    winsound.Beep(2048, 700)
+
+    winsound.Beep(2048, 700)
